@@ -1,2 +1,99 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+# Auto detect text files and perform LF normalization
+* text=auto
+import json
+
+class Plane:
+    def __init__(self, model, brand, serial_no, seat_capacity):
+        self.model = model
+        self.brand = brand
+        self.serial_no = serial_no
+        self.seat_capacity = seat_capacity
+
+    def __str__(self):
+        return f"{self.brand} {self.model} - Serial No: {self.serial_no} - Capacity: {self.seat_capacity}"
+
+class Location:
+    def __init__(self, country, city, airport, is_active):
+        self.country = country
+        self.city = city
+        self.airport = airport
+        self.is_active = is_active
+
+    def __str__(self):
+        status = "Active" if self.is_active else "Inactive"
+        return f"{self.airport}, {self.city}, {self.country} ({status})"
+
+class Flight:
+    def __init__(self, plane, location, time):
+        self.plane = plane
+        self.location = location
+        self.time = time
+        self.reservations = []
+
+    def available_seats(self):
+        return self.plane.seat_capacity - len(self.reservations)
+
+    def __str__(self):
+        return f"Flight: {self.location.city} ({self.location.airport}) - Time: {self.time} - Available Seats: {self.available_seats()}"
+
+class Reservation:
+    def __init__(self, flight, first_name, last_name, age):
+        self.flight = flight
+        self.first_name = first_name
+        self.last_name = last_name
+        self.age = age
+
+    def to_dict(self):
+        return {
+            "flight": f"{self.flight.location.city} - {self.flight.time}",
+            "first_name": self.first_name,
+            "last_name": self.last_name,
+            "age": self.age
+        }
+
+def save_reservations_to_file(reservations, filename="reservations.json"):
+    with open(filename, 'w') as f:
+        json.dump([r.to_dict() for r in reservations], f, indent=4)
+
+def main():
+    plane1 = Plane("737", "Boeing", "A123", 4)
+    plane2 = Plane("A320", "Airbus", "B456", 2)
+
+    location1 = Location("Turkey", "Istanbul", "IST", True)
+    location2 = Location("Germany", "Berlin", "BER", True)
+
+    flight1 = Flight(plane1, location1, "09:00")
+    flight2 = Flight(plane2, location2, "14:30")
+
+    flights = [flight1, flight2]
+
+    print("--- Available Flights ---")
+    for i, flight in enumerate(flights):
+        print(f"{i+1}. {flight}")
+
+    choice = input("Please select a flight (1 or 2): ")
+    if choice in ["1", "2"]:
+        selected = flights[int(choice)-1]
+
+        if selected.available_seats() <= 0:
+            print("Sorry, no available seats on this flight.")
+            return
+
+        print("--- Reservation Details ---")
+        first_name = input("First Name: ")
+        last_name = input("Last Name: ")
+        age = int(input("Age: "))
+
+        new_reservation = Reservation(selected, first_name, last_name, age)
+        selected.reservations.append(new_reservation)
+
+        save_reservations_to_file(selected.reservations)
+
+        print("Reservation successfully saved.")
+    else:
+        print("Invalid selection.")
+
+if __name__ == "__main__":
+    main()
